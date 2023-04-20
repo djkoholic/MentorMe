@@ -80,17 +80,13 @@ class User(AbstractBaseUser):
 
 class Question(models.Model):
     title = models.CharField(max_length=128)
-    skills = models.ManyToManyField(Skill)
+
     def __str__(self):
-        skills = self.skills.all()
-        skill_names = ",".join(str(skill) for skill in skills)
-        return f"{self.title}\nSkills: {skill_names}"
+        return f"{self.title}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, blank=False)
 
     def __str__(self):
-        skills = self.question.skills.all()
-        skill_names = ",".join(str(skill) for skill in skills)
-        return f"{self.question.title} Skills: {skill_names}"
+        return f"{self.user.email} - {self.question.title}"

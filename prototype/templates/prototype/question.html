@@ -7,10 +7,21 @@
     <title>Question | MentorMe</title>
 </head>
 <body>
-    <form method="post">
+    {% if flag %}
+    <form action="{% url 'question' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        {% for question in similar_questions %}
+        <div>{{question}}</div>
+        {% endfor %}
+        <button type="submit">Submit</button>
+    </form>
+    {% else %}
+    <form action="{% url 'check' %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Submit</button>
+    {% endif %}
     </form>
 </body>
 </html>

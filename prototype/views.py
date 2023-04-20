@@ -3,11 +3,28 @@ from django.contrib.auth import authenticate, login, logout
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import SignUpForm, QuestionForm
-from .models import User, Notification
-from .nlp import get_recommendation
+from .models import User, Notification, Question
+from .nlp import get_recommendation, check_similar_questions
 from django.forms.models import model_to_dict
 from django.db.models import Prefetch
 # Create your views here.
+def check(request):
+    if request.method == 'POST':
+        form = QuestionForm(request.POST)
+        questions = Question.objects.all()
+        data = []
+        for question in questions:
+            data.append(model_to_dict(question))
+        if form.is_valid():
+            question = form.cleaned_data["title"]
+            question_ids = check_similar_questions(question, data)
+            questions = Question.objects.filter(id__in=question_ids)
+            return render(request, 'prototype/question.html', {
+                'form': form,
+                "flag": True,
+                "similar_questions": questions
+            })
+        
 
 def question(request):
     if request.method == "POST":
@@ -25,10 +42,7 @@ def question(request):
         
         if form.is_valid():
             question = form.save()
-            skills = form.cleaned_data.get('skills')
-            skill_list = [skill.name for skill in skills]
-            skill_str = ','.join(skill_list)
-            recommendations = get_recommendation(skill_str, data)
+            recommendations = get_recommendation(question.title, data)
             for email in recommendations:
                 user = User.objects.filter(email=email).get()
                 notif = Notification(user=user, question=question)
@@ -36,7 +50,10 @@ def question(request):
             return redirect('index')
     else:
         form = QuestionForm()
-    return render(request, 'prototype/question.html', {'form': form})
+    return render(request, 'prototype/question.html', {
+        'form': form,
+        'flag': False
+    })
 
 def index(request):
     return render(request, "prototype/index.html")

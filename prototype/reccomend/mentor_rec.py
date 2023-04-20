@@ -17,4 +17,4 @@ def mentor_recom(skills, recomm_count=5) :
     print(ans.Mentor_name)
     return ans
 
-mentor_recom('NLP,JAVA')
+mentor_recom('What to learn for machine learning?')

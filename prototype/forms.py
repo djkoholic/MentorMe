@@ -17,14 +17,6 @@ class SignUpForm(UserCreationForm):
     
 class QuestionForm(forms.ModelForm):
     title = forms.CharField()
-    skills = forms.ModelMultipleChoiceField(queryset=Skill.objects.all())
     class Meta:
         model = Question
-        fields = ['title', 'skills']
-
-    def save(self, commit=True):
-        question = super(QuestionForm, self).save(commit=False)
-        if commit:
-            question.save()
-            self.save_m2m()
-        return question
+        fields = ['title']
