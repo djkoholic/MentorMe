@@ -4,7 +4,7 @@ from django import forms
 # Create your models here.
 
 class userManager(BaseUserManager):
-    def create_user(self, first_name, last_name, user_type, email, password):
+    def create_user(self, first_name, last_name, user_type, skills, email, password):
         if not email:
             raise ValueError("Users must have an email address.")
         if not first_name:
@@ -13,19 +13,22 @@ class userManager(BaseUserManager):
             raise ValueError("Users must have a last name.")
         if not user_type:
             raise ValueError("Users must have type.")
+        
         user = self.model(
             email=self.normalize_email(email), first_name=first_name, last_name=last_name, user_type=user_type
         )
+        user.skills.set(skills)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, first_name, last_name, user_type, email, password):
+    def create_superuser(self, first_name, last_name, user_type, skills, email, password):
         user = self.create_user(
             email=self.normalize_email(email),
             first_name=first_name,
             last_name=last_name,
             user_type=user_type,
+            skills=skills,
             password=password,
         )
         user.is_admin = True

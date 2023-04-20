@@ -26,17 +26,9 @@ def login_view(request):
 
 def sign_up(request):
     if request.method == "POST":
-        fn = request.POST["first_name"]
-        ln = request.POST["last_name"]
-        email = request.POST["email"]
-        password = request.POST["password"]
-        new_user = User.objects.create_user(fn, ln, email, password)
-        new_user.save()
-        user = authenticate(request, email=email, password=password)
-        login(request, user)
-    if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+            print(form)
             form.save()
             return redirect('index')
     else:
