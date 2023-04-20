@@ -4,7 +4,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import SignUpForm, QuestionForm
 from .models import User
-from .nlp import convert_to_df
+from .nlp import get_recommendation
 from django.forms.models import model_to_dict
 from django.db.models import Prefetch
 # Create your views here.
@@ -22,8 +22,12 @@ def question(request):
             skills_values_str = ','.join(skills_values)
             mentor_dict['skills'] = skills_values_str
             data.append(mentor_dict)
-        print(convert_to_df(data))
+        
         if form.is_valid():
+            skills = form.cleaned_data.get('skills')
+            skill_list = [skill.name for skill in skills]
+            skill_str = ','.join(skill_list)
+            print(get_recommendation(skill_str, data))
             form.save()
             return redirect('index')
     else:
