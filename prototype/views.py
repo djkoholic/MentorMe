@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import SignUpForm, QuestionForm
-from .models import User
+from .models import User, Notification
 from .nlp import get_recommendation
 from django.forms.models import model_to_dict
 from django.db.models import Prefetch
@@ -13,7 +13,7 @@ def question(request):
     if request.method == "POST":
         form = QuestionForm(request.POST)
         users = User.objects.prefetch_related(Prefetch('skills'))
-        mentors = users.filter(user_type='ME')
+        mentors = users.filter(user_type='MO')
         data = []
         for mentor in mentors:
             mentor_dict = model_to_dict(mentor)
@@ -24,11 +24,15 @@ def question(request):
             data.append(mentor_dict)
         
         if form.is_valid():
+            question = form.save()
             skills = form.cleaned_data.get('skills')
             skill_list = [skill.name for skill in skills]
             skill_str = ','.join(skill_list)
-            print(get_recommendation(skill_str, data))
-            form.save()
+            recommendations = get_recommendation(skill_str, data)
+            for email in recommendations:
+                user = User.objects.filter(email=email).get()
+                notif = Notification(user=user, question=question)
+                notif.save()
             return redirect('index')
     else:
         form = QuestionForm()
@@ -65,3 +69,7 @@ def sign_up(request):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
+
+def notification(request):
+    notifications = Notification.objects.filter(user=request.user)
+    return render(request, "prototype/notification.html", {"notifications": notifications})

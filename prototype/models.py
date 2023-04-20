@@ -4,7 +4,7 @@ from django import forms
 # Create your models here.
 
 class userManager(BaseUserManager):
-    def create_user(self, first_name, last_name, user_type, skills, email, password):
+    def create_user(self, first_name, last_name, user_type, email, password, skills=[]):
         if not email:
             raise ValueError("Users must have an email address.")
         if not first_name:
@@ -17,18 +17,17 @@ class userManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email), first_name=first_name, last_name=last_name, user_type=user_type
         )
-        user.skills.set(skills)
         user.set_password(password)
         user.save(using=self._db)
+        user.skills.set(skills)
         return user
 
-    def create_superuser(self, first_name, last_name, user_type, skills, email, password):
+    def create_superuser(self, first_name, last_name, user_type, email, password):
         user = self.create_user(
             email=self.normalize_email(email),
             first_name=first_name,
             last_name=last_name,
             user_type=user_type,
-            skills=skills,
             password=password,
         )
         user.is_admin = True
@@ -36,6 +35,8 @@ class userManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
+    
+    
 
 class Skill(models.Model):
     name = models.CharField(max_length=32)
@@ -73,7 +74,23 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+    
+    def __str__(self):
+        return f"{self.email} - {self.user_type}"
 
 class Question(models.Model):
     title = models.CharField(max_length=128)
     skills = models.ManyToManyField(Skill)
+    def __str__(self):
+        skills = self.skills.all()
+        skill_names = ",".join(str(skill) for skill in skills)
+        return f"{self.title}\nSkills: {skill_names}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, blank=False)
+
+    def __str__(self):
+        skills = self.question.skills.all()
+        skill_names = ",".join(str(skill) for skill in skills)
+        return f"{self.question.title} Skills: {skill_names}"

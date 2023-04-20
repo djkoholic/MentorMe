@@ -12,4 +12,4 @@ def get_recommendation(match_skills, mentors, count=5):
     cosine_sim = cosine_similarity(vectors, title_vector)
     idx = np.argsort(np.array(cosine_sim[:,0]))[-count:]
     ans = mentors.iloc[idx]
-    return ans.email
+    return ans["email"].to_list()
