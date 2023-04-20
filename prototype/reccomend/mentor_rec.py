@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer, C
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
-df = pd.read_csv("reccomend\\mentor_recom_c.csv")
+df = pd.read_csv("prototype\\reccomend\mentor_recom_c.csv")
 
 vectorizer = TfidfVectorizer(stop_words='english')
 vectors = vectorizer.fit_transform(df.Skills)

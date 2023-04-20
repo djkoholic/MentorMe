@@ -48,7 +48,6 @@ class User(AbstractBaseUser):
     USER_TYPE_CHOICES = (
         ("ME", "Mentee"),
         ("MO", "Mentor"),
-        ("SU", "Super User")
     )
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
@@ -75,4 +74,6 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return True
 
-
+class Question(models.Model):
+    title = models.CharField(max_length=128)
+    skills = models.ManyToManyField(Skill)
