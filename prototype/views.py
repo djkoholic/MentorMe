@@ -5,12 +5,24 @@ from django.urls import reverse
 from .forms import SignUpForm, QuestionForm
 from .models import User
 from .nlp import convert_to_df
+from django.forms.models import model_to_dict
+from django.db.models import Prefetch
 # Create your views here.
 
 def question(request):
     if request.method == "POST":
         form = QuestionForm(request.POST)
-        print(convert_to_df(User.objects.filter(user_type='ME').all()))
+        users = User.objects.prefetch_related(Prefetch('skills'))
+        mentors = users.filter(user_type='ME')
+        data = []
+        for mentor in mentors:
+            mentor_dict = model_to_dict(mentor)
+            del mentor_dict['id'], mentor_dict['last_login'], mentor_dict['password'], mentor_dict['user_type'], mentor_dict['is_admin'], mentor_dict['is_staff'], mentor_dict['is_superuser'], mentor_dict['is_active'], mentor_dict['skills']
+            skills_values = [skill.name for skill in mentor.skills.all()]
+            skills_values_str = ','.join(skills_values)
+            mentor_dict['skills'] = skills_values_str
+            data.append(mentor_dict)
+        print(convert_to_df(data))
         if form.is_valid():
             form.save()
             return redirect('index')

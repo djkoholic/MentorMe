@@ -15,7 +15,7 @@ class SignUpForm(UserCreationForm):
             self.save_m2m()
         return user
     
-class QuestionForm(forms.Form):
+class QuestionForm(forms.ModelForm):
     title = forms.CharField()
     skills = forms.ModelMultipleChoiceField(queryset=Skill.objects.all())
     class Meta:
