@@ -3,8 +3,9 @@ from .models import User, Skill, Question
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 class UserLoginForm(AuthenticationForm):
-    username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    class Meta:
+        model = User
+        fields = ("email", 'password')
 
 class SignUpForm(UserCreationForm):
     skills = forms.ModelMultipleChoiceField(queryset=Skill.objects.all())

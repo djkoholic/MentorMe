@@ -11,19 +11,22 @@ from django.db.models import Prefetch
 def check(request):
     if request.method == 'POST':
         form = QuestionForm(request.POST)
-        questions = Question.objects.all()
-        data = []
-        for question in questions:
-            data.append(model_to_dict(question))
-        if form.is_valid():
-            question = form.cleaned_data["title"]
-            question_ids = check_similar_questions(question, data)
-            questions = Question.objects.filter(id__in=question_ids)
-            return render(request, 'prototype/question.html', {
-                'form': form,
-                "flag": True,
-                "similar_questions": questions
-            })
+        questions = Question.objects.filter(is_answered=True).all()
+        if not questions:
+            questions = ["No similar questions"]
+        else:
+            data = []
+            for question in questions:
+                data.append(model_to_dict(question))
+            if form.is_valid():
+                question = form.cleaned_data["title"]
+                question_ids = check_similar_questions(question, data)
+                questions = Question.objects.filter(id__in=question_ids)
+        return render(request, 'prototype/question.html', {
+            'form': form,
+            "flag": True,
+            "similar_questions": questions
+        })
         
 
 def question(request):
@@ -41,13 +44,14 @@ def question(request):
             data.append(mentor_dict)
         
         if form.is_valid():
-            question = form.save()
-            print(question.title)
-            recommendations = get_recommendation_question(question.title, data)
+            question = form.cleaned_data["title"]
+            ques = Question(user=request.user, title=question, is_answered=False)
+            ques.save()
+            recommendations = get_recommendation_question(question, data)
             print(recommendations)
             for email in recommendations:
                 user = User.objects.filter(email=email).get()
-                notif = Notification(user=user, question=question)
+                notif = Notification(user=user, question=ques)
                 notif.save()
             return redirect('index')
     else:
@@ -69,17 +73,18 @@ def index(request):
 
 def login_view(request):
     if request.method == "POST":
-        form = UserLoginForm(request.POST)
+        form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password, backend='prototype.backends.CaseInsensitiveModelBackend')
+            email = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+            user = authenticate(request, email=email, password=password, backend='prototype.backends.CaseInsensitiveModelBackend')
             if user:
                 login(request, user)
                 return redirect('index')
         else:
+            form = UserLoginForm()
             return render(
-                request, "prototype/login.html", {"message": "Invalid Credentials"}
+                request, "prototype/login.html", {"message": "Invalid Credentials",'form': form}
             )
     form = UserLoginForm()
     return render(request, "prototype/login.html", {'form': form})
