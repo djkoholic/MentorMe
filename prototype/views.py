@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from .forms import SignUpForm, QuestionForm
+from .forms import SignUpForm, QuestionForm, UserLoginForm
 from .models import User, Notification, Question
 from .nlp import get_recommendation_question, check_similar_questions, get_recommendation_skills
 from django.forms.models import model_to_dict
@@ -42,7 +42,9 @@ def question(request):
         
         if form.is_valid():
             question = form.save()
+            print(question.title)
             recommendations = get_recommendation_question(question.title, data)
+            print(recommendations)
             for email in recommendations:
                 user = User.objects.filter(email=email).get()
                 notif = Notification(user=user, question=question)
@@ -57,30 +59,41 @@ def question(request):
 
 def index(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        if request.user.user_type == 'ME':
+            return redirect("dashboard")
+        else:
+            return redirect("notification")
     else:
         return render(request, "prototype/index.html")
 
 
 def login_view(request):
     if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
-        user = authenticate(request, email=email, password=password)
-        if user:
-            login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+        form = UserLoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password, backend='prototype.backends.CaseInsensitiveModelBackend')
+            if user:
+                login(request, user)
+                return redirect('index')
         else:
             return render(
                 request, "prototype/login.html", {"message": "Invalid Credentials"}
             )
-    return render(request, "prototype/login.html")
+    form = UserLoginForm()
+    return render(request, "prototype/login.html", {'form': form})
 
 def sign_up(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            email = form.cleaned_data["email"]
+            password = form.cleaned_data["password1"]
+            user = authenticate(request, email=email, password=password, backend='prototype.backends.CaseInsensitiveModelBackend')
+            if user:
+                login(request, user)    
             return redirect('index')
     else:
         form = SignUpForm()
@@ -92,7 +105,7 @@ def logout_view(request):
 
 def notification(request):
     notifications = Notification.objects.filter(user=request.user)
-    return render(request, "prototype/notification.html", {"notifications": notifications})
+    return render(request, "prototype/dashboard.html", {"notifications": notifications})
 
 def dashboard(request):
     user = User.objects.filter(email=request.user.email).get()

@@ -10,10 +10,11 @@
     {% if message %}
         {{message}}
     {% endif %}
-    <form action="{% url 'login' %}" method="POST">
+    <form method="POST">
         {% csrf_token %}
-        Email<input type="text" name="email">
-        Password<input type="text" name="password">
-        <input type="submit">
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+    <div><a href="{% url 'signup' %}">Sign Up</a></div>
 </body>
 </html>

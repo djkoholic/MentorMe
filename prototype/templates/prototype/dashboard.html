@@ -1,5 +1,6 @@
 {% extends "prototype/navbar.html" %} {% block body %}
     <h1>Welcome to your dashboard, {{request.user.first_name}}</h1>
+    {% if request.user.user_type == 'ME' %}
     <div>Your recommended mentors</div>
     {% for mentor in mentors %}
     <div> {{mentor}} </div>
@@ -8,4 +9,12 @@
     {% for question in questions %}
     <div> {{question.title}} - {{question.is_answered}} </div>
     {% endfor %}
+    {% else %}
+    <div>Your notifications</div>
+    {% for notif in notifications %}
+    <div>
+        {{notif}}
+    </div>
+    {% endfor %}
+    {% endif %}
 {% endblock %}
