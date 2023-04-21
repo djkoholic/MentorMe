@@ -4,7 +4,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import SignUpForm, QuestionForm
 from .models import User, Notification, Question
-from .nlp import get_recommendation, check_similar_questions
+from .nlp import get_recommendation_question, check_similar_questions, get_recommendation_skills
 from django.forms.models import model_to_dict
 from django.db.models import Prefetch
 # Create your views here.
@@ -42,7 +42,7 @@ def question(request):
         
         if form.is_valid():
             question = form.save()
-            recommendations = get_recommendation(question.title, data)
+            recommendations = get_recommendation_question(question.title, data)
             for email in recommendations:
                 user = User.objects.filter(email=email).get()
                 notif = Notification(user=user, question=question)
@@ -90,3 +90,24 @@ def logout_view(request):
 def notification(request):
     notifications = Notification.objects.filter(user=request.user)
     return render(request, "prototype/notification.html", {"notifications": notifications})
+
+def dashboard(request):
+    user = User.objects.filter(email=request.user.email).get()
+    questions = Question.objects.filter(user=user)
+    users = User.objects.prefetch_related(Prefetch('skills'))
+    mentors = users.filter(user_type='MO')
+    data = []
+    for mentor in mentors:
+        mentor_dict = model_to_dict(mentor)
+        del mentor_dict['id'], mentor_dict['last_login'], mentor_dict['password'], mentor_dict['user_type'], mentor_dict['is_admin'], mentor_dict['is_staff'], mentor_dict['is_superuser'], mentor_dict['is_active'], mentor_dict['skills']
+        skills_values = [skill.name for skill in mentor.skills.all()]
+        skills_values_str = ','.join(skills_values)
+        mentor_dict['skills'] = skills_values_str
+        data.append(mentor_dict)
+    skill_list = [skill.name for skill in user.skills.all()]
+    skills = ','.join(skill_list)
+    recommended_mentors = get_recommendation_skills(skills, data)
+    return render(request, "prototype/dashboard.html", {
+        "questions": questions,
+        "mentors": recommended_mentors
+    })

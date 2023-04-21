@@ -79,14 +79,23 @@ class User(AbstractBaseUser):
         return f"{self.email} - {self.user_type}"
 
 class Question(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
     title = models.CharField(max_length=128)
+    is_answered = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.user.email} - {self.title}"
+
+class Answer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, blank=False)
+
+    def __str__(self):
+        return f"{self.question.title}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, blank=False)
 
     def __str__(self):
-        return f"{self.user.email} - {self.question.title}"
+        return f"{self.question.user.email} - {self.question.title}"
