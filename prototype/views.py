@@ -3,10 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .forms import SignUpForm, QuestionForm, UserLoginForm
-from .models import User, Notification, Question
+from .models import User, Notification, Question, Answer
 from .nlp import get_recommendation_question, check_similar_questions, get_recommendation_skills
 from django.forms.models import model_to_dict
 from django.db.models import Prefetch
+import json
+
 # Create your views here.
 def check(request):
     if request.method == 'POST':
@@ -110,7 +112,15 @@ def logout_view(request):
 
 def notification(request):
     notifications = Notification.objects.filter(user=request.user)
-    return render(request, "prototype/dashboard.html", {"notifications": notifications})
+    data = []
+    for notif in notifications:
+        data_dict = {
+            "id": notif.id,
+            "question_id": notif.question.id,
+            "title": notif.question.title,
+        }
+        data.append(data_dict)
+    return render(request, "prototype/dashboard.html", {"data": data})
 
 def dashboard(request):
     user = User.objects.filter(email=request.user.email).get()
@@ -132,3 +142,18 @@ def dashboard(request):
         "questions": questions,
         "mentors": recommended_mentors
     })
+
+def answer(request, id):
+    question = Question.objects.filter(id=id).get()
+    if request.method == 'POST':
+        content = request.POST["content"]
+        answer = Answer(user=request.user, question=question, content=content)
+        answer.save()
+        question.is_answered = True
+        question.save()
+        notifications = Notification.objects.filter(question=question).all()
+        for notif in notifications:
+            notif.delete()
+        return HttpResponse("Answer Saved")
+    else:
+        return render(request, "prototype/answer.html", {"question": question})

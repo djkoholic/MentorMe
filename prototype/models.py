@@ -89,6 +89,7 @@ class Question(models.Model):
 class Answer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', blank=False, default=User.objects.filter(email="jaivardhan@gmail.com").get().email)
     question = models.OneToOneField(Question, on_delete=models.CASCADE, blank=False)
+    content = models.CharField(max_length=512, default="DEFAULT")
 
     def __str__(self):
         return f"{self.question.title}"
