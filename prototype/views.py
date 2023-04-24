@@ -24,10 +24,19 @@ def check(request):
                 question = form.cleaned_data["title"]
                 question_ids = check_similar_questions(question, data)
                 questions = Question.objects.filter(id__in=question_ids)
+                answer_list = []
+                for question in questions:
+                    answer_dict = {
+                        "title": question.title,
+                    }
+                    answer = Answer.objects.filter(question=question).get()
+                    answer_dict["answer_id"] = answer.id
+                    answer_list.append(answer_dict)
+                
         return render(request, 'prototype/question.html', {
             'form': form,
             "flag": True,
-            "similar_questions": questions
+            "similar_questions": answer_list
         })
         
 
@@ -124,7 +133,20 @@ def notification(request):
 
 def dashboard(request):
     user = User.objects.filter(email=request.user.email).get()
-    questions = Question.objects.filter(user=user)
+    questions = Question.objects.filter(user=user, is_answered=False)
+    answered_questions = Question.objects.filter(user=user, is_answered=True)
+    answer_list = []
+    
+    if answered_questions:
+        for question in answered_questions:
+            answer_dict = {
+                "title": question.title,
+            }
+            answer = Answer.objects.filter(question=question).get()
+            answer_dict["answer_id"] = answer.id
+            answer_list.append(answer_dict)
+    else:
+        answer_list = ["No answered"]
     users = User.objects.prefetch_related(Prefetch('skills'))
     mentors = users.filter(user_type='MO')
     data = []
@@ -140,6 +162,7 @@ def dashboard(request):
     recommended_mentors = get_recommendation_skills(skills, data)
     return render(request, "prototype/dashboard.html", {
         "questions": questions,
+        "answers": answer_list,
         "mentors": recommended_mentors
     })
 
@@ -154,6 +177,10 @@ def answer(request, id):
         notifications = Notification.objects.filter(question=question).all()
         for notif in notifications:
             notif.delete()
-        return HttpResponse("Answer Saved")
+        return HttpResponseRedirect(reverse('forum', args=[answer.id]))
     else:
         return render(request, "prototype/answer.html", {"question": question})
+    
+def forum(request, id):
+    answer = Answer.objects.filter(id=id).get()
+    return render(request, "prototype/forum.html", {"answer": answer})

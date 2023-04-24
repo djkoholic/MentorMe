@@ -1,27 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Question | MentorMe</title>
-</head>
-<body>
+{% extends "prototype/navbar.html" %} {% load static %} {% block body %}
+
     {% if flag %}
     <form action="{% url 'question' %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        {% for question in similar_questions %}
-        <div>{{question}}</div>
-        {% endfor %}
+        <div id="answers"></div>
         <button type="submit">Submit</button>
     </form>
     {% else %}
     <form action="{% url 'check' %}" method="post">
+        
         {% csrf_token %}
         {{ form.as_p }}
+        
         <button type="submit">Submit</button>
+    
     {% endif %}
     </form>
-</body>
-</html>
+    <div id="similar_questions"></div>
+
+{% endblock %}
+{% block script %}
+{{similar_questions|json_script:"answers"}}
+    <script type="text/babel" src="{% static 'prototype/answer.js' %}" ></script>
+{% endblock %}

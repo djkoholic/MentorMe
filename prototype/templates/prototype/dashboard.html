@@ -8,8 +8,10 @@
     <br>
     <div>Your questions</div>
     {% for question in questions %}
-    <div> {{question.title}} - {{question.is_answered}} </div>
+        <div>{{question.title}}</div>
     {% endfor %}
+    <div>Your answers</div>
+    <div id="similar_questions"></div>
     {% else %}
     <div>Your notifications</div>
     <div id="notifications"></div>
@@ -19,4 +21,7 @@
 {% block script %}
     {{data|json_script:"questions"}}
     <script type="text/babel" src="{% static 'prototype/questions.js' %}" ></script>
+
+    {{answers|json_script:"answers"}}
+    <script type="text/babel" src="{% static 'prototype/answer.js' %}" ></script>
 {% endblock %}

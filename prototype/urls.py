@@ -10,5 +10,6 @@ urlpatterns = [
     path("notification", views.notification, name="notification"),
     path("check", views.check, name="check"),
     path("dashboard", views.dashboard, name="dashboard"),
-    path("answer/<int:id>", views.answer, name="answer")
+    path("answer/<int:id>", views.answer, name="answer"),
+    path("forum/<int:id>", views.forum, name="forum")
 ]
