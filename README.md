@@ -9,8 +9,7 @@ Features which have been implemented:
 - Asking questions by mentees to mentors
 - Showing similar questions before posting a question
 - Sending the mentors, which have been matched according to their expertise, the question to answer.
-
-Currently in development:
 - Forum page
 - Answer form page
 - All the backend connected to the above tasks
+
